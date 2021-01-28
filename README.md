@@ -2,7 +2,7 @@
 
 CSC412/2506 Winter 2021
 
-Due:
+Due: Friday Feb. 12
 
 ## Running notebooks with Pluto.jl
 
