@@ -1,8 +1,20 @@
 ### A Pluto.jl notebook ###
-# v0.12.19
+# v0.12.20
 
 using Markdown
 using InteractiveUtils
+
+# ╔═╡ d36bb668-64ff-11eb-1f91-0f9ae7017a57
+begin
+	using PlutoUI
+	PlutoUI.TableOfContents()
+end
+
+# ╔═╡ 86371c3e-6112-11eb-1660-f32994a6b1a5
+using Plots, Markdown
+
+# ╔═╡ 93fd3fce-636a-11eb-1582-b9548a3bd220
+using Distributions
 
 # ╔═╡ aa84f014-6111-11eb-25e5-c7bec21824e9
 md"""
@@ -23,6 +35,11 @@ md"""
 Starting with the definition of Euclidean norm, quickly show that the distance of $x$ from the origin is $\sqrt{ x ^ \intercal x }$
 """
 
+# ╔═╡ 4c7256c8-6444-11eb-1011-8da6eef12f61
+md"""
+Answer: $d_{euclidean}(x) = \lVert x \rVert_2 = \sqrt{\lVert x \rVert^2_2} = \sqrt{x^Tx}.\quad\square$
+"""
+
 # ╔═╡ 08b6ed2a-6112-11eb-3277-69f7c404be51
 md"""
 ### Distribution of distances of Gaussian samples from origin
@@ -36,14 +53,18 @@ In low-dimensions our intuition tells us that samples from the unit Gaussian wil
 Does this confirm your intuition that the samples will be near the origin?
 """
 
-# ╔═╡ 86371c3e-6112-11eb-1660-f32994a6b1a5
+# ╔═╡ ffa3ee82-6309-11eb-391f-b16892752a1d
+begin
+	n= 10000;
+	data = randn(n);
+	distance = .√ (data .^ 2);
+	histogram(distance, normalize=true, label="Distance from Origin");
+	title!("Normalized Histogram (n=$n)");
+end
 
-
-# ╔═╡ 117c783a-6112-11eb-0cfc-bb24a3234baf
-"""md
-### Draw 10000 samples from $D=\{1,2,3,10,100\}$ Gaussians and, on a single plot, show the normalized histograms for the distance of those samples from the origin. As the dimensionality of the Gaussian increases, what can you say about the expected distance of the samples from the Gaussian's mean (in this case, origin).
-
-Answer
+# ╔═╡ 5d8c78ec-636a-11eb-1325-bdab7e7e7577
+md"""
+Answer: Yes. When $D=1$, the samples are near the origin.
 """
 
 # ╔═╡ 1ccebb58-6112-11eb-3028-cff830e3a9e8
@@ -56,6 +77,28 @@ md"""
 
 As the dimensionality of the Gaussian increases, what can you say about the expected distance of the samples from the Gaussian's mean (in this case, origin)?
 """
+
+# ╔═╡ 6aca97d0-636c-11eb-08b1-95fb018618ef
+function generate_mvgaussian(D=1, n=10000)
+	return rand(MvNormal(D, 1), n)
+end
+
+# ╔═╡ 5c244d3c-644f-11eb-3008-778dfa469faa
+begin
+	ks = [1, 2, 3, 10, 100]
+	datas = generate_mvgaussian.(ks, [10000, 10000, 10000, 10000, 10000]);
+	hist_resolution = collect(0:0.1:15);
+	for (data, dim) in zip(datas, ks)
+		distance = dropdims(.√sum((data .^ 2), dims=1), dims=1);
+		if dim == ks[1]
+			histogram(distance, normalize=true, bins=hist_resolution, label="D=$dim");
+		else 
+			histogram!(distance, normalize=true, bins=hist_resolution, label="D=$dim");
+		end
+	end
+	title!("Normalized Histogram");
+	current();
+end
 
 # ╔═╡ 387dc1de-6174-11eb-069c-e70e4483ea67
 md"""
@@ -71,7 +114,17 @@ of the $\chi$-distribution for $k=\{1,2,3,10,100\}$.
 """
 
 # ╔═╡ 67cc8c54-6174-11eb-02d1-95d31e908329
+begin
+	for k in ks
+		plot!(hist_resolution, pdf.(Chi(k), hist_resolution),  label="k=$k");
+	end
+	current();
+end
 
+# ╔═╡ 03f56bd8-651b-11eb-2012-e9ddc850eac7
+md"""
+Answer: As the dimensionality of Gaussian increases, the expected distance from data point to the mean increases (, which seems to be counter-intuitive).
+"""
 
 # ╔═╡ 6865c7f2-6174-11eb-2d0b-c73f00d5c347
 md"""
@@ -86,6 +139,27 @@ Using the above result about $\chi$-distribution, derive how $\vert \vert x _a -
 """
 
 # ╔═╡ dbb1e2c2-6174-11eb-0b7b-7b93b3e3444c
+md"""
+$x_a - x_b \sim \mathcal{N}(0_D, 2I_D).$
+As given, $Y = \sqrt{\sum_{i=1}^k(\frac{x_i-\mu_i}{\sigma_i})^2} \sim \chi(k)$. We write $\tilde{x} \triangleq x_a - x_b$, which yields $\tilde{x} \sim \mathcal{N}(0_D, 2I_D)$. 
+
+Hence, 
+
+$\begin{align*}
+Y &= \sqrt{\sum_{i=1}^D\left(\frac{\tilde{x_i}}{\sqrt{2}}\right)^2}\\
+&= \sqrt{\frac{1}{2}\sum_{i=1}^D\tilde{x_i}^2}\\
+&= \frac{\sqrt{2}}{2}\lVert \tilde{x} \rVert_2 \sim \chi(D).\\
+\end{align*}$
+Use change of variable formula, we have $g: \mathbb{R} \rightarrow \mathbb{R}$, i.e., $g(X) = \sqrt{2}X$, a scalar to scalar transformation. Hence, the resultant PDF is:
+
+$\begin{align*}
+f_Y(y) &= f_X(g^{-1}(y))\left\lvert \frac{d}{dy}g^{-1}(y)\right\rvert\\
+&= f_X(\frac{\sqrt{2}}{2}y)\frac{\sqrt{2}}{2}.\end{align*}$
+
+Hence, $\lVert x_a - x_b \rVert_2 \sim \frac{\sqrt{2}}{2}\chi(\frac{\sqrt{2}}{2}D).$
+"""
+
+# ╔═╡ e6812bde-6527-11eb-1f9b-0d3231fa99e3
 
 
 # ╔═╡ dc4a3644-6174-11eb-3e97-0143edb860f8
@@ -99,7 +173,26 @@ For for $D=\{1,2,3,10,100\}$.
 """
 
 # ╔═╡ 171207b6-6175-11eb-2467-cdfb7e1fd324
+function generate_mvgaussian_2(D=1, n=10000)
+	return rand.([MvNormal(D, 1),MvNormal(D, 1)], [n,n])
+end
 
+# ╔═╡ fdef832a-639b-11eb-3005-d77b0a3009d3
+begin
+	datas_2 = generate_mvgaussian_2.(ks, [1000, 1000, 1000, 1000, 1000]);
+	hist_resolution_2 = collect(0:0.1:20);
+	for (data, dim) in zip(datas_2, ks)
+		distance = dropdims(.√sum(((data[1] - data[2]) .^2), dims=1), dims=1)
+		if dim == ks[1]
+			histogram(distance, normalize=true, bins=hist_resolution_2, label="D=$dim");
+			plot!(hist_resolution_2, pdf.(Chi(dim), hist_resolution_2), label="Χ(k=$dim)");
+		else
+			histogram!(distance, normalize=true, bins=hist_resolution_2, label="D=$dim");
+			plot!(hist_resolution_2, 1 / √2 * pdf.(Chi(dim), 1 / √2 * hist_resolution_2), label="Χ(k=$dim)");
+		end
+	end
+	current();
+end
 
 # ╔═╡ 18adf0b2-6175-11eb-1753-a7f33f0d7ca3
 md"""
@@ -121,6 +214,44 @@ Is a higher log-likelihood for the interpolated points necessarily better?
 Given this, is it a good idea to linearly interpolate between samples from a high dimensional Gaussian?
 """
 
+# ╔═╡ 9a7bbb3a-63a8-11eb-3faa-f3c5b96281d8
+begin
+	ps_1 = [];
+	n_sample = 1000;
+	datas_3 = generate_mvgaussian_2.(ks, [n_sample, n_sample, n_sample, n_sample, n_sample]);
+	α = collect(0:0.01:1);
+	logllhd_linear = []
+	for (data, dim) in zip(datas_3, ks)
+		logllhd = []
+		for _α in α
+			interpolated_data = _α .* data[1] + (1 .- _α) .* data[2];
+			lllhd = 0;
+			for i in 1:n_sample
+				lllhd += loglikelihood(MvNormal(dim, 1), interpolated_data[:,i]);
+			end
+			lllhd /= n_sample;
+			append!(logllhd, lllhd);
+		end
+		if dim == ks[1]
+			p = plot(α, logllhd, label="D=$dim");
+		else
+			p = plot(α, logllhd, label="D=$dim");
+		end
+		push!(logllhd_linear, logllhd);
+		xlabel!("α");
+		ylabel!("log-likelihood");
+		title!("Linear Interpolation");
+		push!(ps_1, p);
+	end
+	current();
+	plot(ps_1[1], ps_1[2], ps_1[3], ps_1[4], ps_1[5], layout=(1,5), size=(2000, 400));
+end
+
+# ╔═╡ 88398ff0-6520-11eb-2fe4-c3556175b4fc
+md"""
+Answer: The log-likelihood of the interpolated point increases with α until 0.5, where the log-likelihood starts to decrease. The percentage difference between the max log-likelihood and min log-likelihood keeps increasing with $D$. This implies that using linear interpolation in high dimension Gaussian distribution will deviate the actual data for significant amount, which means linear interpolation is not a wise choice.
+"""
+
 # ╔═╡ a738e7ba-6175-11eb-0103-fb6319b44ece
 md"""
 ###  Polar Interpolation Between Samples
@@ -140,7 +271,43 @@ Give an intuitive explanation for why polar interpolation is more suitable than 
 """
 
 # ╔═╡ d0b81a0c-6175-11eb-3005-811ab72f7077
+begin
+	logllhd_polar = []
+	for (data, dim) in zip(datas_3, ks)
+		logllhd = []
+		for _α in α
+			interpolated_data = √_α .* data[1] + √(1 .- _α) .* data[2];
+			_size = size(interpolated_data);
+			lllhd = 0;
+			for i in 1:n_sample
+				lllhd += loglikelihood(MvNormal(dim, 1), interpolated_data[:,i]);
+			end
+			lllhd /= n_sample;
+			append!(logllhd, lllhd);
+		end
+		push!(logllhd_polar, logllhd);
+	end
+end
 
+# ╔═╡ bb190436-6466-11eb-04a9-0df767583083
+begin
+	ps_2 = []
+	for (lnr, plr, dim) in zip(logllhd_linear, logllhd_polar, ks)
+		p = plot(α, lnr, label="Linear");
+		plot!(p, α, plr, label="Polar");
+		title!("Interpolation D=$dim");
+		xlabel!("α");
+		ylabel!("log-likelihood");
+		push!(ps_2, p);
+	end
+	current();
+	plot(ps_2[1], ps_2[2], ps_2[3], ps_2[4], ps_2[5], layout=(1,5), size=(2000, 400));
+end
+
+# ╔═╡ 1f8e377a-6521-11eb-0a3e-c355e48cf246
+md"""
+Answer: The plots of linear interpolation are the same as above. We notice that polar interpolation results in more flat log-likelihood as α increases, which suggests less deviation. Therefore, comparing to linear interpolation, polar interpolation is more suitable for high dimensional Gaussians. 
+"""
 
 # ╔═╡ e3b3cd7c-6111-11eb-093e-7ffa8410b742
 md"""
@@ -158,23 +325,76 @@ How does the log-likelihood along the linear interpolation compare to the log-li
 
 
 # ╔═╡ 07176c60-6176-11eb-0336-db9f450ed67f
+begin
+	ps_3 = [];
+	for (data, dim) in zip(datas_3, ks)
+		linear_logllhd = [];
+		polar_logllhd = [];
+		for _α in α
+			linear_interpolate = _α .* data[1] + (1 .- _α) .* data[2];
+			polar_interpolate = √_α .* data[1] + √(1 .- _α) .* data[2];
+			linear_norm = [];
+			polar_norm = [];
+			linear_lllhd = 0;
+			polar_lllhd = 0;
+			for i in 1:n_sample
+				append!(linear_norm, .√(linear_interpolate[:,i]' * linear_interpolate[:,i]));
+				append!(polar_norm, .√(polar_interpolate[:,i]' * polar_interpolate[:,i]));
+			end
+			for i in 1:n_sample
+				linear_lllhd += loglikelihood(Chi(linear_norm[i]), linear_norm[i]);
+				polar_lllhd += loglikelihood(Chi(linear_norm[i]), polar_norm[i]);
+			end
+			linear_lllhd /= n_sample;
+			polar_lllhd /= n_sample;
+			append!(linear_logllhd, linear_lllhd);
+			append!(polar_logllhd, polar_lllhd);
+		end
+		p = plot(α, linear_logllhd, label="Linear");
+		plot!(α, polar_logllhd, label="Polar")
+		xlabel!("α");
+		ylabel!("log-likelihood");
+		title!("Norm along Interpolation D=$dim");
+		push!(ps_3, p);
+	end
+	current();
+	plot(ps_3[1], ps_3[2], ps_3[3], ps_3[4], ps_3[5], layout=(1,5), size=(2000, 400));
+end
 
+# ╔═╡ dc188788-6521-11eb-19d8-edada47b933b
+md"""
+Answer: When the dimensionality of Gaussian is relative low, linear interpolation provides better performance. Whereas polar interpolation has better results when the dimensionality of Gaussian is high.
+"""
 
 # ╔═╡ Cell order:
+# ╠═d36bb668-64ff-11eb-1f91-0f9ae7017a57
 # ╟─aa84f014-6111-11eb-25e5-c7bec21824e9
 # ╟─0634fd58-6112-11eb-37f6-45112ee734ae
+# ╟─4c7256c8-6444-11eb-1011-8da6eef12f61
 # ╟─08b6ed2a-6112-11eb-3277-69f7c404be51
 # ╠═86371c3e-6112-11eb-1660-f32994a6b1a5
-# ╟─117c783a-6112-11eb-0cfc-bb24a3234baf
+# ╠═ffa3ee82-6309-11eb-391f-b16892752a1d
+# ╟─5d8c78ec-636a-11eb-1325-bdab7e7e7577
 # ╟─1ccebb58-6112-11eb-3028-cff830e3a9e8
+# ╠═93fd3fce-636a-11eb-1582-b9548a3bd220
+# ╠═6aca97d0-636c-11eb-08b1-95fb018618ef
+# ╠═5c244d3c-644f-11eb-3008-778dfa469faa
 # ╟─387dc1de-6174-11eb-069c-e70e4483ea67
 # ╠═67cc8c54-6174-11eb-02d1-95d31e908329
+# ╟─03f56bd8-651b-11eb-2012-e9ddc850eac7
 # ╟─6865c7f2-6174-11eb-2d0b-c73f00d5c347
 # ╠═dbb1e2c2-6174-11eb-0b7b-7b93b3e3444c
+# ╠═e6812bde-6527-11eb-1f9b-0d3231fa99e3
 # ╟─dc4a3644-6174-11eb-3e97-0143edb860f8
 # ╠═171207b6-6175-11eb-2467-cdfb7e1fd324
+# ╠═fdef832a-639b-11eb-3005-d77b0a3009d3
 # ╟─18adf0b2-6175-11eb-1753-a7f33f0d7ca3
+# ╠═9a7bbb3a-63a8-11eb-3faa-f3c5b96281d8
+# ╠═88398ff0-6520-11eb-2fe4-c3556175b4fc
 # ╟─a738e7ba-6175-11eb-0103-fb6319b44ece
 # ╠═d0b81a0c-6175-11eb-3005-811ab72f7077
+# ╠═bb190436-6466-11eb-04a9-0df767583083
+# ╟─1f8e377a-6521-11eb-0a3e-c355e48cf246
 # ╟─e3b3cd7c-6111-11eb-093e-7ffa8410b742
 # ╠═07176c60-6176-11eb-0336-db9f450ed67f
+# ╟─dc188788-6521-11eb-19d8-edada47b933b
