@@ -121,7 +121,7 @@ md"""
 @testset "Numerically testing Gaussian Sample Statistics" begin
   #TODO: choose some values of mean and variance to test
   true_mean = 25.
-  true_var = 4. 
+  true_var = 1. 
   #TODO: Sample 100000 samples with sample_gaussian
   data = sample_gaussian(100000, mean=true_mean, variance=true_var)
   #TODO: Use `mean` and `var` to compute statistics
