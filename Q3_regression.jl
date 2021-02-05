@@ -194,7 +194,7 @@ Conmsider suppressing display once other questions are complete.**
 # ╔═╡ 40761078-6695-11eb-16b6-c79b4deb34f4
 # generic plot function
 function target_plot(x, y, title)
-	p = scatter(dropdims(x, dims=1), y, label="sample");
+	p = scatter(dropdims(x, dims=1), y, label="sample", size=(800,600));
 	#scatter!(1:1000, y, label="y");
 	xlabel!("x");
 	ylabel!("y");
@@ -302,7 +302,7 @@ For each function, plot the linear regression model given by $Y \sim \mathcal{N}
 # ╔═╡ a298c8ae-66a9-11eb-1445-1d9baefa3454
 function target_plot_2(p, β, title, label)
 	plot(p);
-	plot!(0:0.5:20, collect(0:0.5:20) * β, ribbon=1.0, label=label);
+	plot!(0:0.5:20, collect(0:0.5:20) * β, ribbon=1.0, label=label, size=(800,600));
 	title!(title);
 	return current();
 end
@@ -481,7 +481,7 @@ begin
 	σs = [0.1, 0.3, 1.0, 2.0];
 	for (lllhd, σ) in zip(lllhd_10, σs)
 		if lllhd == lllhd_10[1]
-			plot(σs, lllhd, yaxis=:log, label="n=10, σ=$σ")
+			plot(σs, lllhd, yaxis=:log, label="n=10, σ=$σ", size=(800,600))
 		else
 			plot!(σs, lllhd, yaxis=:log, label="n=10, σ=$σ")
 		end
@@ -1018,4 +1018,4 @@ You can try
 # ╠═788a21fe-617c-11eb-11fa-4dc3da665951
 # ╟─79674636-617c-11eb-0213-fb99e78e9f1d
 # ╠═84c933cc-617c-11eb-3f49-65f335a05486
-# ╠═8c3f1d38-617c-11eb-2820-f32c96e276c6
+# ╟─8c3f1d38-617c-11eb-2820-f32c96e276c6
