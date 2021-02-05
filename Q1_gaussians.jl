@@ -62,9 +62,6 @@ md"""
 E.g. from a library, e.g. Distributions.jl.
 """
 
-# ╔═╡ bbca17dc-610f-11eb-0dc7-43115c69562c
-
-
 # ╔═╡ 2905a278-610e-11eb-3219-1338acdcdb10
 @testset "Implementation of Gaussian pdf" begin
   x = randn()
@@ -81,9 +78,6 @@ md"""
 Answer: 3.989422804014327, in general $\frac{1}{\sqrt{2\pi\sigma^2}} ℯ^{-\frac{\mu^2}{2\sigma^2}}$ ; $p(x=0) = 0$.
 """
 
-# ╔═╡ 79c4c724-610f-11eb-1504-ab62472e6da0
-
-
 # ╔═╡ d2f2d65c-610e-11eb-15c4-55e479aeb7b0
 md"""
 ###  A Write the transformation that takes $x \sim \mathcal{N}(0.,1.)$ to $z \sim \mathcal{N}(\mu, \sigma^2)$
@@ -92,9 +86,6 @@ A Gaussian with mean $\mu$ and variance $\sigma^2$ can be written as a simple tr
 
 Answer: $\sigma x + \mu$
 """
-
-# ╔═╡ 880b0b40-610f-11eb-2e2a-732841b5c779
-
 
 # ╔═╡ d1739e74-610e-11eb-3f02-d3b44270a23b
 md"""
@@ -154,7 +145,7 @@ function plot_hist_pdf(n=10000, mean=10.,variance=2.)
 	#plot!() #TODO
 	xs = mean - 3 * √variance : 0.01 : mean + 3 * √variance
 	ys = gaussian_pdf.(xs, mean=mean, variance=variance)
-	plot!(xs, ys, label="pdf")
+	plot!(xs, ys, label="pdf", size=(800,600))
 end
 
 # ╔═╡ efe3d008-6305-11eb-107d-738622f89f36
@@ -176,14 +167,11 @@ Answer: The histogram approximates the pdf.
 # ╟─763e1346-610d-11eb-305c-7bc070bb0334
 # ╠═373706c2-610c-11eb-2273-2be89f7db95e
 # ╟─f2ef3f92-610c-11eb-25d5-cdc66ee3a63a
-# ╠═bbca17dc-610f-11eb-0dc7-43115c69562c
 # ╠═b4c42a46-610e-11eb-1504-a53931294bc7
 # ╠═83cfb79a-610e-11eb-1b17-abbdcd436b3e
 # ╠═2905a278-610e-11eb-3219-1338acdcdb10
-# ╠═d4f16cb6-610e-11eb-2d58-add315b2ddbd
-# ╠═79c4c724-610f-11eb-1504-ab62472e6da0
+# ╟─d4f16cb6-610e-11eb-2d58-add315b2ddbd
 # ╠═d2f2d65c-610e-11eb-15c4-55e479aeb7b0
-# ╠═880b0b40-610f-11eb-2e2a-732841b5c779
 # ╟─d1739e74-610e-11eb-3f02-d3b44270a23b
 # ╠═ab40ff20-610f-11eb-0563-7ba8a4a6fda9
 # ╟─a857197a-610f-11eb-30ac-27c2af7f0860
