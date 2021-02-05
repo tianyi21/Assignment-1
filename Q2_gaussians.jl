@@ -58,7 +58,7 @@ begin
 	n= 10000;
 	data = randn(n);
 	distance = .√ (data .^ 2);
-	histogram(distance, normalize=true, label="Distance from Origin");
+	histogram(distance, normalize=true, label="Distance from Origin", size=(800,600));
 	title!("Normalized Histogram (n=$n)");
 end
 
@@ -91,12 +91,24 @@ begin
 	for (data, dim) in zip(datas, ks)
 		distance = dropdims(.√sum((data .^ 2), dims=1), dims=1);
 		if dim == ks[1]
-			histogram(distance, normalize=true, bins=hist_resolution, label="D=$dim");
+			histogram(distance, normalize=true, bins=hist_resolution, label="D=$dim", size=(800,600));
 		else 
 			histogram!(distance, normalize=true, bins=hist_resolution, label="D=$dim");
 		end
 	end
 	title!("Normalized Histogram");
+	current();
+end
+
+# ╔═╡ 67cc8c54-6174-11eb-02d1-95d31e908329
+begin
+	using SpecialFunctions
+	function chipdf(k, x)
+		1 / (2 ^ ((k / 2) - 1) * gamma(k / 2)) * x ^ (k - 1) * ℯ ^ (- x ^ 2 / 2)
+	end
+	for k in ks
+		plot!(hist_resolution, chipdf.([k], hist_resolution),  label="k=$k");
+	end
 	current();
 end
 
@@ -112,14 +124,6 @@ with means $\mu_i$ and standard deviations $\sigma_i$ then the statistic $Y =
 On the previous normalized histogram, plot the probability density function (pdf) 
 of the $\chi$-distribution for $k=\{1,2,3,10,100\}$.
 """
-
-# ╔═╡ 67cc8c54-6174-11eb-02d1-95d31e908329
-begin
-	for k in ks
-		plot!(hist_resolution, pdf.(Chi(k), hist_resolution),  label="k=$k");
-	end
-	current();
-end
 
 # ╔═╡ 03f56bd8-651b-11eb-2012-e9ddc850eac7
 md"""
@@ -159,9 +163,6 @@ f_Y(y) &= f_X(g^{-1}(y))\left\lvert \frac{d}{dy}g^{-1}(y)\right\rvert\\
 Hence, $\lVert x_a - x_b \rVert_2 \sim \frac{\sqrt{2}}{2}\chi(\frac{\sqrt{2}}{2}D).$
 """
 
-# ╔═╡ e6812bde-6527-11eb-1f9b-0d3231fa99e3
-
-
 # ╔═╡ dc4a3644-6174-11eb-3e97-0143edb860f8
 md"""
 ### Plot pdfs of distribution distances between samples 
@@ -184,11 +185,11 @@ begin
 	for (data, dim) in zip(datas_2, ks)
 		distance = dropdims(.√sum(((data[1] - data[2]) .^2), dims=1), dims=1)
 		if dim == ks[1]
-			histogram(distance, normalize=true, bins=hist_resolution_2, label="D=$dim");
-			plot!(hist_resolution_2, pdf.(Chi(dim), hist_resolution_2), label="Χ(k=$dim)");
+			histogram(distance, normalize=true, bins=hist_resolution_2, label="D=$dim", size=(800,600));
+			plot!(hist_resolution_2, chipdf.([dim], hist_resolution_2), label="Χ(k=$dim)");
 		else
 			histogram!(distance, normalize=true, bins=hist_resolution_2, label="D=$dim");
-			plot!(hist_resolution_2, 1 / √2 * pdf.(Chi(dim), 1 / √2 * hist_resolution_2), label="Χ(k=$dim)");
+			plot!(hist_resolution_2, 1 / √2 * chipdf.([dim], 1 / √2 * hist_resolution_2), label="Χ(k=$dim)");
 		end
 	end
 	current();
@@ -244,7 +245,7 @@ begin
 		push!(ps_1, p);
 	end
 	current();
-	plot(ps_1[1], ps_1[2], ps_1[3], ps_1[4], ps_1[5], layout=(1,5), size=(2000, 400));
+	plot(ps_1[1], ps_1[2], ps_1[3], ps_1[4], ps_1[5], layout=(1,5), size=(2500, 500));
 end
 
 # ╔═╡ 88398ff0-6520-11eb-2fe4-c3556175b4fc
@@ -301,7 +302,7 @@ begin
 		push!(ps_2, p);
 	end
 	current();
-	plot(ps_2[1], ps_2[2], ps_2[3], ps_2[4], ps_2[5], layout=(1,5), size=(2000, 400));
+	plot(ps_2[1], ps_2[2], ps_2[3], ps_2[4], ps_2[5], layout=(1,5), size=(2500, 500));
 end
 
 # ╔═╡ 1f8e377a-6521-11eb-0a3e-c355e48cf246
@@ -358,7 +359,7 @@ begin
 		push!(ps_3, p);
 	end
 	current();
-	plot(ps_3[1], ps_3[2], ps_3[3], ps_3[4], ps_3[5], layout=(1,5), size=(2000, 400));
+	plot(ps_3[1], ps_3[2], ps_3[3], ps_3[4], ps_3[5], layout=(1,5), size=(2500, 500));
 end
 
 # ╔═╡ dc188788-6521-11eb-19d8-edada47b933b
@@ -383,8 +384,7 @@ Answer: When the dimensionality of Gaussian is relative low, linear interpolatio
 # ╠═67cc8c54-6174-11eb-02d1-95d31e908329
 # ╟─03f56bd8-651b-11eb-2012-e9ddc850eac7
 # ╟─6865c7f2-6174-11eb-2d0b-c73f00d5c347
-# ╠═dbb1e2c2-6174-11eb-0b7b-7b93b3e3444c
-# ╠═e6812bde-6527-11eb-1f9b-0d3231fa99e3
+# ╟─dbb1e2c2-6174-11eb-0b7b-7b93b3e3444c
 # ╟─dc4a3644-6174-11eb-3e97-0143edb860f8
 # ╠═171207b6-6175-11eb-2467-cdfb7e1fd324
 # ╠═fdef832a-639b-11eb-3005-d77b0a3009d3
