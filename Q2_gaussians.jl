@@ -10,11 +10,40 @@ begin
 	PlutoUI.TableOfContents()
 end
 
+# ╔═╡ 2a6cbf80-68f3-11eb-3aff-adf7809a84d8
+using Markdown
+
 # ╔═╡ 86371c3e-6112-11eb-1660-f32994a6b1a5
-using Plots, Markdown
+using Plots
 
 # ╔═╡ 93fd3fce-636a-11eb-1582-b9548a3bd220
 using Distributions
+
+# ╔═╡ f943d460-68f6-11eb-00ab-33daea95b336
+begin
+	using LinearAlgebra
+	function loglikelihood_mvgaussian(μ, Σ, x)
+		# For faster matrix inversion and det
+		if Σ == Matrix(I, size(μ)[1], size(μ)[1])
+			Σ_inv = Σ
+			Σ_det = 1
+		else
+			Σ_inv = inv(Σ)
+			Σ_det = det(Σ)
+		end
+		k = size(μ)[1]
+		return log((2 * π) ^ (- k / 2) * Σ_det ^ (- 0.5) * ℯ ^ (- 0.5 * (x - μ)' * Σ_inv * (x - μ)))
+	end
+end
+
+# ╔═╡ 2c643eba-68f3-11eb-1210-eb03afab7102
+md"""
+CSC 2506 Probabilistic Learning and Reasoning
+
+Assignment I - Q2
+
+Tianyi Liu liuti110 1005820827
+"""
 
 # ╔═╡ aa84f014-6111-11eb-25e5-c7bec21824e9
 md"""
@@ -37,7 +66,7 @@ Starting with the definition of Euclidean norm, quickly show that the distance o
 
 # ╔═╡ 4c7256c8-6444-11eb-1011-8da6eef12f61
 md"""
-Answer: $d_{euclidean}(x) = \lVert x \rVert_2 = \sqrt{\lVert x \rVert^2_2} = \sqrt{x^Tx}.\quad\square$
+Answer: $d_{euclidean}(x) = \lVert x \rVert_2 = \sqrt{\lVert x \rVert^2_2} = \sqrt{ \sum_{i=1}^D x_i^2} = \sqrt{x^Tx}.\quad\square$
 """
 
 # ╔═╡ 08b6ed2a-6112-11eb-3277-69f7c404be51
@@ -86,7 +115,7 @@ end
 # ╔═╡ 5c244d3c-644f-11eb-3008-778dfa469faa
 begin
 	ks = [1, 2, 3, 10, 100]
-	datas = generate_mvgaussian.(ks, [10000, 10000, 10000, 10000, 10000]);
+	datas = generate_mvgaussian.(ks, [10000]);
 	hist_resolution = collect(0:0.1:15);
 	for (data, dim) in zip(datas, ks)
 		distance = dropdims(.√sum((data .^ 2), dims=1), dims=1);
@@ -112,6 +141,11 @@ begin
 	current();
 end
 
+# ╔═╡ 8213426a-68f4-11eb-1475-f3ee3641db0d
+md"""
+Answer: As the dimensionality of Gaussian increases, the expected distance from data point to the mean vector increases.
+"""
+
 # ╔═╡ 387dc1de-6174-11eb-069c-e70e4483ea67
 md"""
 ### Plot the $\chi$-distribution
@@ -123,11 +157,6 @@ with means $\mu_i$ and standard deviations $\sigma_i$ then the statistic $Y =
 
 On the previous normalized histogram, plot the probability density function (pdf) 
 of the $\chi$-distribution for $k=\{1,2,3,10,100\}$.
-"""
-
-# ╔═╡ 03f56bd8-651b-11eb-2012-e9ddc850eac7
-md"""
-Answer: As the dimensionality of Gaussian increases, the expected distance from data point to the mean increases (, which seems to be counter-intuitive).
 """
 
 # ╔═╡ 6865c7f2-6174-11eb-2d0b-c73f00d5c347
@@ -158,7 +187,7 @@ Use change of variable formula, we have $g: \mathbb{R} \rightarrow \mathbb{R}$, 
 
 $\begin{align*}
 f_Y(y) &= f_X(g^{-1}(y))\left\lvert \frac{d}{dy}g^{-1}(y)\right\rvert\\
-&= f_X(\frac{\sqrt{2}}{2}y)\frac{\sqrt{2}}{2}.\end{align*}$
+&= f_X\left(\frac{\sqrt{2}}{2}y\right)\frac{\sqrt{2}}{2}.\end{align*}$
 
 Hence, $\lVert x_a - x_b \rVert_2 \sim \frac{\sqrt{2}}{2}\chi(\frac{\sqrt{2}}{2}D).$
 """
@@ -180,13 +209,13 @@ end
 
 # ╔═╡ fdef832a-639b-11eb-3005-d77b0a3009d3
 begin
-	datas_2 = generate_mvgaussian_2.(ks, [1000, 1000, 1000, 1000, 1000]);
+	datas_2 = generate_mvgaussian_2.(ks, [1000]);
 	hist_resolution_2 = collect(0:0.1:20);
 	for (data, dim) in zip(datas_2, ks)
 		distance = dropdims(.√sum(((data[1] - data[2]) .^2), dims=1), dims=1)
 		if dim == ks[1]
 			histogram(distance, normalize=true, bins=hist_resolution_2, label="D=$dim", size=(800,600));
-			plot!(hist_resolution_2, chipdf.([dim], hist_resolution_2), label="Χ(k=$dim)");
+			plot!(hist_resolution_2, 1 / √2 * chipdf.([dim], 1 / √2 * hist_resolution_2), label="Χ(k=$dim)");
 		else
 			histogram!(distance, normalize=true, bins=hist_resolution_2, label="D=$dim");
 			plot!(hist_resolution_2, 1 / √2 * chipdf.([dim], 1 / √2 * hist_resolution_2), label="Χ(k=$dim)");
@@ -194,6 +223,11 @@ begin
 	end
 	current();
 end
+
+# ╔═╡ 1fb0bef2-68f6-11eb-298f-8763210f5171
+md"""
+Answer: The distance between samples from a Gaussian increases as dimensionality increases. For a given data dimensionality, the distance is larger than the results we obtained from the previous question (about $\sqrt{2}/2$ larger).
+"""
 
 # ╔═╡ 18adf0b2-6175-11eb-1753-a7f33f0d7ca3
 md"""
@@ -219,7 +253,7 @@ Given this, is it a good idea to linearly interpolate between samples from a hig
 begin
 	ps_1 = [];
 	n_sample = 1000;
-	datas_3 = generate_mvgaussian_2.(ks, [n_sample, n_sample, n_sample, n_sample, n_sample]);
+	datas_3 = generate_mvgaussian_2.(ks, [n_sample]);
 	α = collect(0:0.01:1);
 	logllhd_linear = []
 	for (data, dim) in zip(datas_3, ks)
@@ -228,7 +262,10 @@ begin
 			interpolated_data = _α .* data[1] + (1 .- _α) .* data[2];
 			lllhd = 0;
 			for i in 1:n_sample
-				lllhd += loglikelihood(MvNormal(dim, 1), interpolated_data[:,i]);
+				# built-in log-likelihood
+				# lllhd += loglikelihood(MvNormal(dim, 1), interpolated_data[:,i]);
+				# manual implementation
+				lllhd += loglikelihood_mvgaussian(zeros(dim), Matrix(I, dim, dim), interpolated_data[:,i])
 			end
 			lllhd /= n_sample;
 			append!(logllhd, lllhd);
@@ -250,7 +287,7 @@ end
 
 # ╔═╡ 88398ff0-6520-11eb-2fe4-c3556175b4fc
 md"""
-Answer: The log-likelihood of the interpolated point increases with α until 0.5, where the log-likelihood starts to decrease. The percentage difference between the max log-likelihood and min log-likelihood keeps increasing with $D$. This implies that using linear interpolation in high dimension Gaussian distribution will deviate the actual data for significant amount, which means linear interpolation is not a wise choice.
+Answer: The log-likelihood of the interpolated point increases with $α$ until $0.5$, where the log-likelihood starts to decrease. The percentage-wise difference between the max log-likelihood and min log-likelihood keeps increasing with $D$. In the meantime, a higher likelihood does not always correspond to a better interpolation results. Recall that samples from higher dimensional Gaussian are most likely to have the same $\ell_2$ norm and also being orthogonal. Linear interpolation does not preserve such relationship. Hence, linear interpolation is not a wise choice in high dimensional Gaussian.
 """
 
 # ╔═╡ a738e7ba-6175-11eb-0103-fb6319b44ece
@@ -281,7 +318,10 @@ begin
 			_size = size(interpolated_data);
 			lllhd = 0;
 			for i in 1:n_sample
-				lllhd += loglikelihood(MvNormal(dim, 1), interpolated_data[:,i]);
+				# built-in log-likelihood
+				# lllhd += loglikelihood(MvNormal(dim, 1), interpolated_data[:,i]);
+				# manual implementation
+				lllhd += loglikelihood_mvgaussian(zeros(dim), Matrix(I, dim, dim), interpolated_data[:,i])
 			end
 			lllhd /= n_sample;
 			append!(logllhd, lllhd);
@@ -307,7 +347,7 @@ end
 
 # ╔═╡ 1f8e377a-6521-11eb-0a3e-c355e48cf246
 md"""
-Answer: The plots of linear interpolation are the same as above. We notice that polar interpolation results in more flat log-likelihood as α increases, which suggests less deviation. Therefore, comparing to linear interpolation, polar interpolation is more suitable for high dimensional Gaussians. 
+Answer: The plots of linear interpolation are the same as above. We notice that polar interpolation results in more flat log-likelihood along $α$. This implies that data points along polar interpolation are similar in the context of probability, which is represented by the likelihood. Whereas, data points along linear interpolation deviate more than them along polar interpolation. Note that polar interpolation preserves the euclidean norm, which is especially necessary for high dimensional Gaussian. Hence, polar interpolation is more suitable than linear interpolation.
 """
 
 # ╔═╡ e3b3cd7c-6111-11eb-093e-7ffa8410b742
@@ -364,11 +404,16 @@ end
 
 # ╔═╡ dc188788-6521-11eb-19d8-edada47b933b
 md"""
-Answer: When the dimensionality of Gaussian is relative low, linear interpolation provides better performance. Whereas polar interpolation has better results when the dimensionality of Gaussian is high.
+Answer: 
+When the dimensionality of Gaussian is relative low, linear interpolation provides better performance. Whereas polar interpolation has better results when the dimensionality of Gaussian is high.
+
+Log-likelihood of linear interpolation is always higher true samples, regardless of the dimensionality.
 """
 
 # ╔═╡ Cell order:
-# ╠═d36bb668-64ff-11eb-1f91-0f9ae7017a57
+# ╟─d36bb668-64ff-11eb-1f91-0f9ae7017a57
+# ╠═2a6cbf80-68f3-11eb-3aff-adf7809a84d8
+# ╟─2c643eba-68f3-11eb-1210-eb03afab7102
 # ╟─aa84f014-6111-11eb-25e5-c7bec21824e9
 # ╟─0634fd58-6112-11eb-37f6-45112ee734ae
 # ╟─4c7256c8-6444-11eb-1011-8da6eef12f61
@@ -380,17 +425,19 @@ Answer: When the dimensionality of Gaussian is relative low, linear interpolatio
 # ╠═93fd3fce-636a-11eb-1582-b9548a3bd220
 # ╠═6aca97d0-636c-11eb-08b1-95fb018618ef
 # ╠═5c244d3c-644f-11eb-3008-778dfa469faa
+# ╟─8213426a-68f4-11eb-1475-f3ee3641db0d
 # ╟─387dc1de-6174-11eb-069c-e70e4483ea67
 # ╠═67cc8c54-6174-11eb-02d1-95d31e908329
-# ╟─03f56bd8-651b-11eb-2012-e9ddc850eac7
 # ╟─6865c7f2-6174-11eb-2d0b-c73f00d5c347
 # ╟─dbb1e2c2-6174-11eb-0b7b-7b93b3e3444c
 # ╟─dc4a3644-6174-11eb-3e97-0143edb860f8
 # ╠═171207b6-6175-11eb-2467-cdfb7e1fd324
 # ╠═fdef832a-639b-11eb-3005-d77b0a3009d3
+# ╟─1fb0bef2-68f6-11eb-298f-8763210f5171
 # ╟─18adf0b2-6175-11eb-1753-a7f33f0d7ca3
+# ╠═f943d460-68f6-11eb-00ab-33daea95b336
 # ╠═9a7bbb3a-63a8-11eb-3faa-f3c5b96281d8
-# ╠═88398ff0-6520-11eb-2fe4-c3556175b4fc
+# ╟─88398ff0-6520-11eb-2fe4-c3556175b4fc
 # ╟─a738e7ba-6175-11eb-0103-fb6319b44ece
 # ╠═d0b81a0c-6175-11eb-3005-811ab72f7077
 # ╠═bb190436-6466-11eb-04a9-0df767583083
