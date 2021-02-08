@@ -5,6 +5,12 @@ using Markdown
 using InteractiveUtils
 
 # ╔═╡ 19d93518-610d-11eb-3a35-21929592fe91
+begin
+	using PlutoUI
+	PlutoUI.TableOfContents()
+end
+
+# ╔═╡ 023da054-68f3-11eb-047f-6122b2b1db62
 using Markdown
 
 # ╔═╡ b4c42a46-610e-11eb-1504-a53931294bc7
@@ -20,6 +26,15 @@ using Statistics: mean, var
 # ╔═╡ 66eb5286-610e-11eb-2ec0-534bafa033ca
 using Plots
 
+# ╔═╡ 08fd5b46-68f3-11eb-3395-413cc176adc0
+md"""
+CSC 2506 Probabilistic Learning and Reasoning
+
+Assignment I - Q1 
+
+Tianyi Liu liuti110 1005820827
+"""
+
 # ╔═╡ 46ec792a-610d-11eb-1dfd-677ecccbdfe6
 md"""
 
@@ -33,7 +48,7 @@ Let $X$ be a univariate random variable distributed according to a Gaussian dist
 md"""
 ###  Can the probability density function (pdf) of $X$ ever take values greater than $1$?
 
-Answer: Yes
+Answer: Yes. $\int f(x)dx = 1$ does not have any restrictions on the value of pdf for a specific $X=x$.
 """
 
 # ╔═╡ 9da736ec-610d-11eb-004f-c75406dd7ce1
@@ -52,7 +67,7 @@ md"""
 function gaussian_pdf(x; mean=0., variance=0.01)
   #default variables mean and variance
   #set with keyword arguments
-  return 1 / (√(2 * π * variance)) * ℯ ^ (- (x - mean) ^ 2/(2 * variance))
+  return 1 /√(2 * π * variance) * ℯ ^ (- (x - mean) ^ 2/(2 * variance))
 end
 
 # ╔═╡ f2ef3f92-610c-11eb-25d5-cdc66ee3a63a
@@ -99,7 +114,7 @@ function sample_gaussian(n; mean=0., variance=0.01)
   # n samples from standard gaussian
   x = randn(n)
   # TODO: transform x to sample z from N(mean,variance)
-  z = √variance * x .+ mean
+  z = √variance .* x .+ mean
   return z
 end;
 
@@ -112,7 +127,7 @@ md"""
 @testset "Numerically testing Gaussian Sample Statistics" begin
   #TODO: choose some values of mean and variance to test
   true_mean = 25.
-  true_var = 1. 
+  true_var = 3
   #TODO: Sample 100000 samples with sample_gaussian
   data = sample_gaussian(100000, mean=true_mean, variance=true_var)
   #TODO: Use `mean` and `var` to compute statistics
@@ -160,10 +175,12 @@ Answer: The histogram approximates the pdf.
 
 
 # ╔═╡ Cell order:
-# ╠═19d93518-610d-11eb-3a35-21929592fe91
-# ╠═46ec792a-610d-11eb-1dfd-677ecccbdfe6
-# ╠═4f5862be-610c-11eb-3722-4de4ac3c675e
-# ╠═9da736ec-610d-11eb-004f-c75406dd7ce1
+# ╟─19d93518-610d-11eb-3a35-21929592fe91
+# ╠═023da054-68f3-11eb-047f-6122b2b1db62
+# ╟─08fd5b46-68f3-11eb-3395-413cc176adc0
+# ╟─46ec792a-610d-11eb-1dfd-677ecccbdfe6
+# ╟─4f5862be-610c-11eb-3722-4de4ac3c675e
+# ╟─9da736ec-610d-11eb-004f-c75406dd7ce1
 # ╟─763e1346-610d-11eb-305c-7bc070bb0334
 # ╠═373706c2-610c-11eb-2273-2be89f7db95e
 # ╟─f2ef3f92-610c-11eb-25d5-cdc66ee3a63a
@@ -171,15 +188,15 @@ Answer: The histogram approximates the pdf.
 # ╠═83cfb79a-610e-11eb-1b17-abbdcd436b3e
 # ╠═2905a278-610e-11eb-3219-1338acdcdb10
 # ╟─d4f16cb6-610e-11eb-2d58-add315b2ddbd
-# ╠═d2f2d65c-610e-11eb-15c4-55e479aeb7b0
+# ╟─d2f2d65c-610e-11eb-15c4-55e479aeb7b0
 # ╟─d1739e74-610e-11eb-3f02-d3b44270a23b
 # ╠═ab40ff20-610f-11eb-0563-7ba8a4a6fda9
 # ╟─a857197a-610f-11eb-30ac-27c2af7f0860
 # ╠═51dfc82c-610e-11eb-2c6e-c7009592e608
 # ╠═5222c896-6110-11eb-3e03-3f5ea5d15658
-# ╠═697c9160-610e-11eb-321a-e3f262d190b4
+# ╟─697c9160-610e-11eb-321a-e3f262d190b4
 # ╠═66eb5286-610e-11eb-2ec0-534bafa033ca
 # ╠═ef08d6be-6110-11eb-031d-bfb21db6f0de
 # ╠═efe3d008-6305-11eb-107d-738622f89f36
-# ╠═7604407c-630a-11eb-249d-a7370223f9e0
+# ╟─7604407c-630a-11eb-249d-a7370223f9e0
 # ╟─5c5c4d7a-610e-11eb-0075-4126b8ba0d23
