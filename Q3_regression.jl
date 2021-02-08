@@ -10,6 +10,9 @@ begin
 	PlutoUI.TableOfContents()
 end
 
+# ╔═╡ d0514234-68f3-11eb-2ff3-e306c59a2058
+using Markdown
+
 # ╔═╡ 2038c102-6177-11eb-047e-95829eaf59b7
 using LinearAlgebra
 
@@ -24,6 +27,15 @@ using Plots
 
 # ╔═╡ d2cb6eda-6179-11eb-3e11-41b238bd071d
 using Zygote: gradient
+
+# ╔═╡ d294c71e-68f3-11eb-115e-3393608662ee
+md"""
+CSC 2506 Probabilistic Learning and Reasoning
+
+Assignment I - Q3
+
+Tianyi Liu liuti110 1005820827
+"""
 
 # ╔═╡ 3b614428-6176-11eb-27af-1d611c78a404
 md"""
@@ -57,7 +69,7 @@ $$\hat\beta = (XX^T)^{-1}XY$$
 # ╔═╡ 644940f6-650a-11eb-10c1-f95e37779bc3
 md"""
 Answer:
-1. When $n<m$, this is an under-determined cases, i.e., there are infinitely many solutions.
+1. When $n<m$, this is an under-determined case, i.e., there are infinitely many solutions.
 
 2. We write $Y = X^T\beta + n$, where $n$ is the noise vector, which conforms the distribution of $Y$.
 $\begin{align*}
@@ -100,16 +112,16 @@ $\begin{align*}
 5.
 We start from the expression in 3.
 $\begin{align*}
--\log l(D\mid X, β, σ) &= -\log\left(\frac{1}{(2\pi)^{n/2}\lvert\Sigma\rvert^{1/2}}\exp\left(-\frac{1}{2\sigma^2}(Y - X^T\beta)^T(Y - X^T\beta)\right)\right)\\
-\frac{\partial -\log l(D\mid X, β, σ)}{\partial β} &= \frac{\partial \frac{1}{2\sigma^2}(Y - X^T\beta)^T(Y - X^T\beta)}{\partial β}\\
-&= \frac{1}{2\sigma^2}(2XX^Tβ - 2XY).
+-\log l(D\mid X, \beta, \sigma) &= -\log\left(\frac{1}{(2\pi)^{n/2}\lvert\Sigma\rvert^{1/2}}\exp\left(-\frac{1}{2\sigma^2}(Y - X^T\beta)^T(Y - X^T\beta)\right)\right)\\
+\frac{\partial -\log l(D\mid X, \beta, \sigma)}{\partial \beta} &= \frac{\partial \frac{1}{2\sigma^2}(Y - X^T\beta)^T(Y - X^T\beta)}{\partial \beta}\\
+&= \frac{1}{2\sigma^2}(2XX^T\beta - 2XY).
 \end{align*}$
 
-Set $\frac{\partial -\log l(D\mid X, β, σ)}{\partial β}$ to $0$ yields:
+Set $\frac{\partial -\log l(D\mid X, \beta, \sigma)}{\partial \beta}$ to $0$ yields:
 
 $\begin{align*}
-\frac{1}{2\sigma^2}(2XX^Tβ - 2XY) &= 0\\
-\hat{β} &= (XX^T)^{-1}XY \quad\square
+\frac{1}{2\sigma^2}(2XX^T\beta - 2XY) &= 0\\
+\hat{\beta} &= (XX^T)^{-1}XY \quad\square
 \end{align*}$
 """
 
@@ -448,7 +460,7 @@ begin
 	      	x,y = sample_batch(target_f, bs)
 			#TODO: log loss, if you want to monitor training progress
 			lllhd = lr_model_nll_stable(β_curr, x, y, σ=σ_model)
-	      	@info "loss: $lllhd  β: $β_curr" 
+	      	@info "iter: $i/$iters\tloss: $lllhd\tβ: $β_curr" 
 	      	#TODO: compute gradients
 			grad_β = gradient((dβ, dx, dy, dσ)->lr_model_nll_stable(dβ, dx, dy, σ=dσ), β_curr, x, y, σ_model)
 			#TODO: gradient descent
@@ -582,9 +594,6 @@ For each target function, start with an initial parameter $\beta$,
 begin
 	#TODO: call training function
 	β_learned = train_lin_reg.([target_f1, target_f2, target_f3], β_init)
-	@show β_learned[1]
-	@show β_learned[2]
-	@show β_learned[3]
 end
 
 # ╔═╡ 4d628d18-617a-11eb-1944-c922f564a1f3
@@ -824,7 +833,7 @@ Write the code that computes the negative log-likelihood for this model where th
 # ╔═╡ 0b7d0ac0-617c-11eb-24c5-b3126ee28f5a
 function nn_with_var_model_nll(θ,x,y)
 	μ, logσ = neural_net_w_var(x, θ)
-	return - sum(gaussian_log_likelihood_stable(μ, ℯ.^logσ, y))
+	return - sum(gaussian_log_likelihood_stable(μ, exp.(logσ), y))
 end
 
 # ╔═╡ 128daf4a-617c-11eb-3c62-1b61708169e0
@@ -857,6 +866,7 @@ function train_nn_w_var_reg(target_f, θ_init; bs= 100, lr = 1e-4, iters=10000)
       	grad_θ = gradient((dθ, dx, dy) -> nn_with_var_model_nll(dθ, dx, dy), θ_curr, x, y)
 		#TODO gradient descent
      	θ_curr -= lr * grad_θ[1]
+		
     end
     return θ_curr
 end
@@ -887,13 +897,13 @@ The default hyperparameters should help, but may need some tuning.
 
 # ╔═╡ 74bd837a-617c-11eb-3716-07cd84f5f4ac
 #TODO: For each target function
-θ_init_μσ = [
-	[randn(1, h_μσ), randn(1, h_μσ), randn(h_μσ), randn(1), rand(h_μσ), rand(1)], 
-	[randn(1, h_μσ), randn(1, h_μσ), randn(h_μσ), randn(1), rand(h_μσ), rand(1)],
-	[randn(1, h_μσ), randn(1, h_μσ), randn(h_μσ), randn(1), rand(h_μσ), rand(1)]] #TODO
+θ_init_μσ = 0.0001 * [
+	[randn(1, h_μσ), randn(1, h_μσ), randn(h_μσ), randn(1), randn(h_μσ), randn(1)], 
+	[randn(1, h_μσ), randn(1, h_μσ), randn(h_μσ), randn(1), randn(h_μσ), randn(1)],
+	[randn(1, h_μσ), randn(1, h_μσ), randn(h_μσ), randn(1), randn(h_μσ), randn(1)]] #TODO
 
 # ╔═╡ 788a21fe-617c-11eb-11fa-4dc3da665951
-θ_learned_μσ = train_nn_w_var_reg.([target_f1, target_f2, target_f3], θ_init_μσ, bs=200, lr=1e-5, iters=120000); #TODO
+θ_learned_μσ = train_nn_w_var_reg.([target_f1, target_f2, target_f3], θ_init_μσ, bs=500, lr=1e-5, iters=80000); #TODO
 
 # ╔═╡ 79674636-617c-11eb-0213-fb99e78e9f1d
 md"""
@@ -905,14 +915,20 @@ md"""
 begin
 	function target_plot_4(p, θ, title, label)
 		plot(p);
-		plot!(0:0.1:20, neural_net(reshape(collect(0:0.1:20), (1,size(collect(0:0.1:20))[1])), θ), ribbon=1.0, label=label);
+		μ_learned, σ_learned = neural_net_w_var(reshape(collect(0:0.1:20), (1,size(collect(0:0.1:20))[1])), θ)
+		plot!(0:0.1:20, μ_learned, ribbon=exp.(σ_learned), label=label);
 		title!(title);
 	return current();
 end
 	graph_base_μσ = [target_plot(x1,y1,""), target_plot(x2,y2,""), target_plot(x3,y3,"")]
 	label_base_μσ = ["NN μσ", "NN μσ", "NN μσ"]
-	target_plot_3.(graph_base_μσ, θ_learned_μσ, title_base, label_base_μσ)
+	target_plot_4.(graph_base_μσ, θ_learned_μσ, title_base, label_base_μσ)
 end
+
+# ╔═╡ 785a86fe-69b5-11eb-1e14-9744ff054c9f
+md"""
+Answer: The results here is reasonable. For ```target_f1```, the underlying varaince is uniform, so as the learned one. For ```target_f2, target_f3```, the underlying variances are increasing with $x$, so as the learned variances. 
+"""
 
 # ╔═╡ 8c3f1d38-617c-11eb-2820-f32c96e276c6
 md"""
@@ -929,9 +945,11 @@ You can try
 
 # ╔═╡ Cell order:
 # ╟─2bb4e4f2-650a-11eb-3ed0-33b445001185
+# ╟─d0514234-68f3-11eb-2ff3-e306c59a2058
+# ╟─d294c71e-68f3-11eb-115e-3393608662ee
 # ╟─3b614428-6176-11eb-27af-1d611c78a404
 # ╟─4c8b7872-6176-11eb-3c4c-117dfe425f8a
-# ╟─644940f6-650a-11eb-10c1-f95e37779bc3
+# ╠═644940f6-650a-11eb-10c1-f95e37779bc3
 # ╟─16c9fa00-6177-11eb-27b4-175a938132af
 # ╠═2038c102-6177-11eb-047e-95829eaf59b7
 # ╠═361f0788-6177-11eb-35a9-d12176832720
@@ -940,7 +958,7 @@ You can try
 # ╟─61d33d5e-6177-11eb-17be-ff5d831900fa
 # ╠═a51a4e8e-6692-11eb-35e9-438e458b1f60
 # ╠═648df4f8-6177-11eb-225e-8f9955713b67
-# ╠═6ac7bb10-6177-11eb-02bc-3513af63a9b9
+# ╟─6ac7bb10-6177-11eb-02bc-3513af63a9b9
 # ╠═8625e7ba-6177-11eb-0f73-f14acfe6a2ea
 # ╠═8c5b76a4-6177-11eb-223a-6b656e173ffb
 # ╟─91b725a8-6177-11eb-133f-cb075b2c50dc
@@ -970,7 +988,7 @@ You can try
 # ╟─7f61ff44-6178-11eb-040b-2f19e52ebaf5
 # ╠═baf4cbea-6178-11eb-247f-4961c91da925
 # ╟─ccedbd3e-6178-11eb-2d26-01016c9dea4b
-# ╟─e8da3e14-6178-11eb-2058-6d5f4a77378b
+# ╠═e8da3e14-6178-11eb-2058-6d5f4a77378b
 # ╟─045fd22a-6179-11eb-3901-8b327ed3b7a0
 # ╠═2b7be59c-6179-11eb-3fde-01eac8b60a9d
 # ╟─314fd0fa-6179-11eb-0d0c-a7efdfa33c65
@@ -1018,4 +1036,5 @@ You can try
 # ╠═788a21fe-617c-11eb-11fa-4dc3da665951
 # ╟─79674636-617c-11eb-0213-fb99e78e9f1d
 # ╠═84c933cc-617c-11eb-3f49-65f335a05486
+# ╟─785a86fe-69b5-11eb-1e14-9744ff054c9f
 # ╟─8c3f1d38-617c-11eb-2820-f32c96e276c6
