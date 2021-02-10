@@ -409,6 +409,26 @@ function lr_model_nll(β,x,y;σ=1.)
   	return - sum(gaussian_log_likelihood(x' * β, σ, y))
 end
 
+# ╔═╡ 033afc0c-617a-11eb-32a9-f3f467476a0a
+begin
+	using Logging # Print training progress to REPL, not pdf
+	
+	function train_lin_reg(target_f, β_init; bs= 100, lr = 1e-6, iters=1000, σ_model=1.)
+		β_curr = β_init
+	    for i in 1:iters
+	      	x,y = sample_batch(target_f, bs)
+			#TODO: log loss, if you want to monitor training progress
+			lllhd = lr_model_nll(β_curr, x, y, σ=σ_model)
+	      	@info "iter: $i/$iters\tloss: $lllhd\tβ: $β_curr" 
+	      	#TODO: compute gradients
+			grad_β = gradient((dβ, dx, dy, dσ)->lr_model_nll(dβ, dx, dy, σ=dσ), β_curr, x, y, σ_model)
+			#TODO: gradient descent
+	      	β_curr -= lr * grad_β[1]
+	    end
+	    return β_curr
+	end
+end
+
 # ╔═╡ 314fd0fa-6179-11eb-0d0c-a7efdfa33c65
 md"""
 ### Compute Negative-Log-Likelihood on data
@@ -419,10 +439,11 @@ under the model with the maximum-likelihood estimate $\hat\beta$ and $\sigma \in
 
 # ╔═╡ 5b1dec3c-6179-11eb-2968-d361e1c18cc8
 begin
-	# Re-implement numerically stable solution
-	function gaussian_log_likelihood_stable(μ, σ, x)
 	"""
-	compute log-likelihood of x under N(μ,σ)
+	# Re-implement numerically stable solution
+	# function gaussian_log_likelihood_stable(μ, σ, x)
+	"""
+	# compute log-likelihood of x under N(μ,σ)
 	"""
 		function scalar_gaussian_lllhd_stable(μs, σs, xs)
 			return log(1 / √(2 * π * σs ^ 2)) + (-0.5 * ((xs - μs) / σs) ^ 2)
@@ -434,6 +455,7 @@ begin
 		#TODO: Negative Log Likelihood
   		return - sum(gaussian_log_likelihood_stable(x' * β, σ, y))
 	end
+	"""
 	
 	for n in (10,100,1000)
     	println("--------  $n  ------------")
@@ -443,30 +465,10 @@ begin
         		println("--------  $σ_model  ------------")
         		x,y = sample_batch(target_f, n)
         		β_mle = beta_mle(x,y);
-        		nll = lr_model_nll_stable(β_mle, x, y, σ=σ_model)
+        		nll = lr_model_nll(β_mle, x, y, σ=σ_model)
         		println("Negative Log-Likelihood: $nll")
       		end
     	end
-	end
-end
-
-# ╔═╡ 033afc0c-617a-11eb-32a9-f3f467476a0a
-begin
-	using Logging # Print training progress to REPL, not pdf
-	
-	function train_lin_reg(target_f, β_init; bs= 100, lr = 1e-6, iters=1000, σ_model=1.)
-		β_curr = β_init
-	    for i in 1:iters
-	      	x,y = sample_batch(target_f, bs)
-			#TODO: log loss, if you want to monitor training progress
-			lllhd = lr_model_nll_stable(β_curr, x, y, σ=σ_model)
-	      	@info "iter: $i/$iters\tloss: $lllhd\tβ: $β_curr" 
-	      	#TODO: compute gradients
-			grad_β = gradient((dβ, dx, dy, dσ)->lr_model_nll_stable(dβ, dx, dy, σ=dσ), β_curr, x, y, σ_model)
-			#TODO: gradient descent
-	      	β_curr -= lr * grad_β[1]
-	    end
-	    return β_curr
 	end
 end
 
@@ -555,7 +557,7 @@ begin
 	β_test = randn()
 	σ_test = rand()
 	x_ad, y_ad = sample_batch(target_f1,100)
-	ad_grad = gradient((dβ, dx, dy, dσ) -> lr_model_nll_stable(dβ, dx, dy, σ=dσ), β_test, x_ad, y_ad, σ_test);
+	ad_grad = gradient((dβ, dx, dy, dσ) -> lr_model_nll(dβ, dx, dy, σ=dσ), β_test, x_ad, y_ad, σ_test);
 	hand_derivative =  ((x_ad * x_ad' * β_test .- x_ad * y_ad) ./ (σ_test ^ 2))[1];
 	@test ad_grad[1] ≈ hand_derivative
 	end
@@ -682,7 +684,7 @@ Write the code that computes the negative log-likelihood for this model where th
 
 # ╔═╡ f65af5b8-617a-11eb-3865-7fa972a6a821
 function nn_model_nll(θ,x,y;σ=1)	
-  return - sum(gaussian_log_likelihood_stable(neural_net(x, θ), σ, y))
+  return - sum(gaussian_log_likelihood(neural_net(x, θ), σ, y))
 end
 
 # ╔═╡ 0f355c54-617b-11eb-2768-7b8066538440
@@ -833,7 +835,7 @@ Write the code that computes the negative log-likelihood for this model where th
 # ╔═╡ 0b7d0ac0-617c-11eb-24c5-b3126ee28f5a
 function nn_with_var_model_nll(θ,x,y)
 	μ, logσ = neural_net_w_var(x, θ)
-	return - sum(gaussian_log_likelihood_stable(μ, exp.(logσ), y))
+	return - sum(gaussian_log_likelihood(μ, exp.(logσ), y))
 end
 
 # ╔═╡ 128daf4a-617c-11eb-3c62-1b61708169e0
@@ -949,7 +951,7 @@ You can try
 # ╟─d294c71e-68f3-11eb-115e-3393608662ee
 # ╟─3b614428-6176-11eb-27af-1d611c78a404
 # ╟─4c8b7872-6176-11eb-3c4c-117dfe425f8a
-# ╠═644940f6-650a-11eb-10c1-f95e37779bc3
+# ╟─644940f6-650a-11eb-10c1-f95e37779bc3
 # ╟─16c9fa00-6177-11eb-27b4-175a938132af
 # ╠═2038c102-6177-11eb-047e-95829eaf59b7
 # ╠═361f0788-6177-11eb-35a9-d12176832720
@@ -980,7 +982,7 @@ You can try
 # ╠═24329fca-6178-11eb-0bdc-45e28e499635
 # ╠═24330276-6178-11eb-0a8f-0f49cb7d57fa
 # ╠═243e38ee-6178-11eb-1c09-71018451b8f7
-# ╠═4f04aca2-6178-11eb-0e59-df88659f11c1
+# ╟─4f04aca2-6178-11eb-0e59-df88659f11c1
 # ╠═a298c8ae-66a9-11eb-1445-1d9baefa3454
 # ╠═6222e9e0-6178-11eb-3448-57e951600ef9
 # ╠═705a7d28-6178-11eb-280d-315614ad9080
