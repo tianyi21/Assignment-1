@@ -187,7 +187,7 @@ Use change of variable formula, we have $g: \mathbb{R} \rightarrow \mathbb{R}$, 
 
 $\begin{align*}
 f_Y(y) &= f_X(g^{-1}(y))\left\lvert \frac{d}{dy}g^{-1}(y)\right\rvert\\
-&= f_X\left(\frac{\sqrt{2}}{2}y\right)\frac{\sqrt{2}}{2}.\end{align*}$
+&= f_X\left(\frac{\sqrt{2}}{2}x\right)\frac{\sqrt{2}}{2}.\end{align*}$
 
 Hence, $\lVert x_a - x_b \rVert_2 \sim \frac{\sqrt{2}}{2}\chi(\frac{\sqrt{2}}{2}D).$
 """
@@ -226,7 +226,7 @@ end
 
 # ╔═╡ 1fb0bef2-68f6-11eb-298f-8763210f5171
 md"""
-Answer: The distance between samples from a Gaussian increases as dimensionality increases. For a given data dimensionality, the distance is larger than the results we obtained from the previous question (about $\sqrt{2}/2$ larger).
+Answer: The distance between samples from a Gaussian increases as dimensionality increases. For a given data dimensionality, the distance is larger than the results we obtained from the previous question (about $\sqrt{2}$ larger).
 """
 
 # ╔═╡ 18adf0b2-6175-11eb-1753-a7f33f0d7ca3
@@ -287,7 +287,11 @@ end
 
 # ╔═╡ 88398ff0-6520-11eb-2fe4-c3556175b4fc
 md"""
-Answer: The log-likelihood of the interpolated point increases with $α$ until $0.5$, where the log-likelihood starts to decrease. The percentage-wise difference between the max log-likelihood and min log-likelihood keeps increasing with $D$. In the meantime, a higher likelihood does not always correspond to a better interpolation results. Recall that samples from higher dimensional Gaussian are most likely to have the same $\ell_2$ norm and also being orthogonal. Linear interpolation does not preserve such relationship. Hence, linear interpolation is not a wise choice in high dimensional Gaussian.
+Answer: The log-likelihood of the interpolated point increases with $α$ until $0.5$, where the log-likelihood starts to decrease. The percentage-wise difference between the max value and the min value keeps increasing with $D$. 
++ A higher likelihood does not always correspond to a better interpolation results. Comparing to the starting point and end point, the likelihood of points along linear interpolation deviate a significant amount. This, in the contrary, reflects that linear interpolation won't produce *convicing* data points.
++ Recall that samples from higher dimensional Gaussian are most likely to have the same $\ell_2$ norm and also being orthogonal. Linear interpolation also does not preserve such relationship.
++ From another prospective, the log-likelihood is always larger than end points. Since the linearly interpolated points are still comes from Gaussian, linear interpolation results in a narrower and higher PDF.
+In summary, linear interpolation is not a wise choice in high dimensional Gaussian.
 """
 
 # ╔═╡ a738e7ba-6175-11eb-0103-fb6319b44ece
@@ -347,7 +351,7 @@ end
 
 # ╔═╡ 1f8e377a-6521-11eb-0a3e-c355e48cf246
 md"""
-Answer: The plots of linear interpolation are the same as above. We notice that polar interpolation results in more flat log-likelihood along $α$. This implies that data points along polar interpolation are similar in the context of probability, which is represented by the likelihood. Whereas, data points along linear interpolation deviate more than them along polar interpolation. Note that polar interpolation preserves the euclidean norm, which is especially necessary for high dimensional Gaussian. Hence, polar interpolation is more suitable than linear interpolation.
+Answer: The plots of linear interpolation are the same as above. We notice that polar interpolation results in flatter log-likelihood curve along $α$. This implies that data points along polar interpolation are similar, and also more convicing in the context of probability, which is represented by the likelihood. Whereas, data points along linear interpolation deviate more than them along polar interpolation. Note that polar interpolation preserves the euclidean norm, which could explain the reason why polar interpolation produces better interpolated data points than linear interpolation. In summary, polar interpolation is more suitable than linear interpolation.
 """
 
 # ╔═╡ e3b3cd7c-6111-11eb-093e-7ffa8410b742
@@ -367,6 +371,9 @@ How does the log-likelihood along the linear interpolation compare to the log-li
 
 # ╔═╡ 07176c60-6176-11eb-0336-db9f450ed67f
 begin
+	function loglikelihood_chi_stable(ks, x)
+		return log(1 / (2 ^ ((ks / 2) - 1) * gamma(ks / 2)) * x ^ (ks - 1)) + (- x ^ 2 / 2)
+	end
 	ps_3 = [];
 	for (data, dim) in zip(datas_3, ks)
 		linear_logllhd = [];
@@ -374,18 +381,10 @@ begin
 		for _α in α
 			linear_interpolate = _α .* data[1] + (1 .- _α) .* data[2];
 			polar_interpolate = √_α .* data[1] + √(1 .- _α) .* data[2];
-			linear_norm = [];
-			polar_norm = [];
-			linear_lllhd = 0;
-			polar_lllhd = 0;
-			for i in 1:n_sample
-				append!(linear_norm, .√(linear_interpolate[:,i]' * linear_interpolate[:,i]));
-				append!(polar_norm, .√(polar_interpolate[:,i]' * polar_interpolate[:,i]));
-			end
-			for i in 1:n_sample
-				linear_lllhd += loglikelihood(Chi(linear_norm[i]), linear_norm[i]);
-				polar_lllhd += loglikelihood(Chi(linear_norm[i]), polar_norm[i]);
-			end
+			linear_norm = .√sum(linear_interpolate[:,1:n_sample]' .* linear_interpolate'[1:n_sample,:], dims=2)
+			polar_norm = .√sum(polar_interpolate[:,1:n_sample]' .* polar_interpolate'[1:n_sample,:], dims=2)
+			linear_lllhd = sum(loglikelihood_chi_stable.(dim, linear_norm))
+			polar_lllhd = sum(loglikelihood_chi_stable.(dim, polar_norm))
 			linear_lllhd /= n_sample;
 			polar_lllhd /= n_sample;
 			append!(linear_logllhd, linear_lllhd);
@@ -405,14 +404,14 @@ end
 # ╔═╡ dc188788-6521-11eb-19d8-edada47b933b
 md"""
 Answer: 
-When the dimensionality of Gaussian is relative low, linear interpolation provides better performance. Whereas polar interpolation has better results when the dimensionality of Gaussian is high.
+For polar interpolation, the results we claimed in the previous question remain unchanged. Additionally, we observe a tradeoff in dimension $D$ for linear interpolation. When $D$ is smaller, the log-likelihood of norm is costantly larger than end points. When $D$ is larger, the log-likelihood of norm is, conversely, smaller than end points. 
 
-Log-likelihood of linear interpolation is always higher true samples, regardless of the dimensionality.
+This indicates that linear interpolations results in less probably samples, reflected as deviation in log-likelihood of either side, and polar interpolations produce comparably good points. 
 """
 
 # ╔═╡ Cell order:
 # ╟─d36bb668-64ff-11eb-1f91-0f9ae7017a57
-# ╠═2a6cbf80-68f3-11eb-3aff-adf7809a84d8
+# ╟─2a6cbf80-68f3-11eb-3aff-adf7809a84d8
 # ╟─2c643eba-68f3-11eb-1210-eb03afab7102
 # ╟─aa84f014-6111-11eb-25e5-c7bec21824e9
 # ╟─0634fd58-6112-11eb-37f6-45112ee734ae
