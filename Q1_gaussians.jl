@@ -126,8 +126,8 @@ md"""
 # ╔═╡ 5222c896-6110-11eb-3e03-3f5ea5d15658
 @testset "Numerically testing Gaussian Sample Statistics" begin
   #TODO: choose some values of mean and variance to test
-  true_mean = 25.
-  true_var = 3
+  true_mean = 20.
+  true_var = 3.
   #TODO: Sample 100000 samples with sample_gaussian
   data = sample_gaussian(100000, mean=true_mean, variance=true_var)
   #TODO: Use `mean` and `var` to compute statistics
@@ -137,7 +137,7 @@ md"""
   @test isapprox(stat_mean, true_mean, atol=1e-2)
   @test isapprox(stat_var, true_var, atol=1e-2)
   # hint: use isapprox with keyword argument atol=1e-2
-end;
+end
 
 # ╔═╡ 697c9160-610e-11eb-321a-e3f262d190b4
 md"""
@@ -176,7 +176,7 @@ Answer: The histogram approximates the pdf.
 
 # ╔═╡ Cell order:
 # ╟─19d93518-610d-11eb-3a35-21929592fe91
-# ╠═023da054-68f3-11eb-047f-6122b2b1db62
+# ╟─023da054-68f3-11eb-047f-6122b2b1db62
 # ╟─08fd5b46-68f3-11eb-3395-413cc176adc0
 # ╟─46ec792a-610d-11eb-1dfd-677ecccbdfe6
 # ╟─4f5862be-610c-11eb-3722-4de4ac3c675e
