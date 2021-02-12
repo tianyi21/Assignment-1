@@ -69,7 +69,7 @@ $$\hat\beta = (XX^T)^{-1}XY$$
 # ╔═╡ 644940f6-650a-11eb-10c1-f95e37779bc3
 md"""
 Answer:
-1. When $n<m$, this is an under-determined case, i.e., there are infinitely many solutions.
+1. When $n<m$, this is an under-determined case in which there are more features than number of equations, i.e., there are infinitely many solutions.
 
 2. We write $Y = X^T\beta + n$, where $n$ is the noise vector, which conforms the distribution of $Y$.
 $\begin{align*}
@@ -82,7 +82,7 @@ $\begin{align*}
 &= \beta.
 \end{align*}$
 $\begin{align*}
-Var[\hat{\beta}] &= \mathbb{E}[(\hat{\beta} - \mathbb{E}[\beta])(\hat{\beta} - \mathbb{E}[\beta])^T]\\
+Cov[\hat{\beta}] &= \mathbb{E}[(\hat{\beta} - \mathbb{E}[\beta])(\hat{\beta} - \mathbb{E}[\beta])^T]\\
 &= \mathbb{E}[((XX^T)^{-1}Xn)((XX^T)^{-1}Xn)^T]\\
 &= \mathbb{E}[(XX^T)^{-1}Xnn^TX^T(XX^T)^{-T}]\\
 &= (XX^T)^{-1}X\mathbb{E}[nn^T]X^T(XX^T)^{-T}\\
@@ -100,7 +100,7 @@ l(Y\mid X,\beta, \sigma) &= \frac{1}{(2\pi)^{n/2}\lvert\Sigma\rvert^{1/2}}\exp\l
 &= \frac{1}{(2\pi)^{n/2}\lvert\Sigma\rvert^{1/2}}\exp\left(-\frac{1}{2\sigma^2}(Y - X^T\beta)^T(Y - X^T\beta)\right)\\
 &= \frac{1}{(2\pi)^{n/2}\lvert\Sigma\rvert^{1/2}}\exp\left(-\frac{1}{2\sigma^2}\sum_{i=1}^n(y_i - x_i \beta)^2\right)
 \end{align*}$
-Hence, maximizing the likelihood is equivalent to minimizing the exponent of likelihood, which is in turns, minimizing the squared error. \quad\square
+Hence, maximizing the likelihood is equivalent to minimizing the exponent of likelihood, which is in turns, minimizing the squared error. $\quad\square$
 
 4.
 $\begin{align*}
@@ -421,7 +421,7 @@ begin
 			lllhd = lr_model_nll(β_curr, x, y, σ=σ_model)
 	      	@info "iter: $i/$iters\tloss: $lllhd\tβ: $β_curr" 
 	      	#TODO: compute gradients
-			grad_β = gradient((dβ, dx, dy, dσ)->lr_model_nll(dβ, dx, dy, σ=dσ), β_curr, x, y, σ_model)
+			grad_β = gradient(dβ->lr_model_nll(dβ, x, y, σ=σ_model), β_curr)
 			#TODO: gradient descent
 	      	β_curr -= lr * grad_β[1]
 	    end
@@ -595,8 +595,17 @@ For each target function, start with an initial parameter $\beta$,
 # ╔═╡ 4adae2ac-617a-11eb-0ed7-cdb1985fad44
 begin
 	#TODO: call training function
-	β_learned = train_lin_reg.([target_f1, target_f2, target_f3], β_init)
+	# β_learned = train_lin_reg.([target_f1, target_f2, target_f3], β_init)
+	β_1_gd = train_lin_reg(target_f1, β_init, σ_model=0.3)
+	β_2_gd = train_lin_reg(target_f2, β_init, iters=10000, σ_model=2.0)
+	β_3_gd = train_lin_reg(target_f3, β_init, iters=10000, σ_model=2.0)
+	β_learned = [β_1_gd, β_2_gd, β_3_gd]
 end
+
+# ╔═╡ 3075f5f0-6ce2-11eb-2685-5f0841e75e59
+md"""
+Note that we have already seen that the best $\sigma$'s for ```target_f1```, ```target_f2```, ```target_f3``` are $0.3, 2.0, 2.0$ correspondingly. Therefore, we use the best $\sigma$ here.
+"""
 
 # ╔═╡ 4d628d18-617a-11eb-1944-c922f564a1f3
 md"""
@@ -734,7 +743,10 @@ begin
 		[rand(1, h), rand(1, h), rand(h), rand(1)],
 		[rand(1, h), rand(1, h), rand(h), rand(1)],
 		[rand(1, h), rand(1, h), rand(h), rand(1)]];
-	θ_learned_nn = train_nn_reg.([target_f1, target_f2, target_f3], θ_init, iters=30000);
+	θ_1_nn = train_nn_reg(target_f1, θ_init[1], iters=30000, σ_model=0.3);
+	θ_2_nn = train_nn_reg(target_f2, θ_init[2], iters=30000, σ_model=2.0);
+	θ_3_nn = train_nn_reg(target_f3, θ_init[3], iters=30000, σ_model=2.0);
+	θ_learned_nn = [θ_1_nn, θ_2_nn, θ_3_nn]
 end;
 
 # ╔═╡ 5b9a5c98-617b-11eb-2ede-9dbbeb8ea32d
@@ -972,8 +984,8 @@ You can try
 # ╠═2bf298d2-6178-11eb-23e3-77a2347ed0a2
 # ╠═2bf9191e-6178-11eb-2db3-f358d690b2a3
 # ╠═2bffc028-6178-11eb-0718-199b410131eb
-# ╠═f6999bb8-6177-11eb-3a0e-35e7a718e0ab
-# ╠═f9f79404-6177-11eb-2d31-857cb99cf7db
+# ╟─f6999bb8-6177-11eb-3a0e-35e7a718e0ab
+# ╟─f9f79404-6177-11eb-2d31-857cb99cf7db
 # ╠═1cfe23f0-6178-11eb-21bf-8d8a46b0d7c6
 # ╠═241f7756-6178-11eb-19a6-c516934c4208
 # ╠═241fda48-6178-11eb-1775-232a4b55d258
@@ -1007,6 +1019,7 @@ You can try
 # ╟─217b1466-617a-11eb-19c6-2f29ef5d3576
 # ╠═449d93e6-617a-11eb-3289-a931618f4bba
 # ╠═4adae2ac-617a-11eb-0ed7-cdb1985fad44
+# ╟─3075f5f0-6ce2-11eb-2685-5f0841e75e59
 # ╟─4d628d18-617a-11eb-1944-c922f564a1f3
 # ╠═4adb7980-617a-11eb-041d-214170284e3a
 # ╟─78cc51f0-617a-11eb-3408-83b8d44df832
