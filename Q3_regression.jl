@@ -170,7 +170,13 @@ Write a function which produces a batch of data $x \sim \text{Uniform}(0,20)$ an
 
 # ╔═╡ 648df4f8-6177-11eb-225e-8f9955713b67
 function sample_batch(target_f, batch_size)
-  x = reshape(rand(Uniform(0,20), batch_size), (1, batch_size))
+  x1 = reshape(rand(Uniform(0,20), batch_size), (1, batch_size))
+  x = []  
+  for i = 1:batch_size
+	append!(x, 20 * rand())
+  end
+  x = reshape(x, (1, batch_size))
+  x = convert.(Float64, x)
   y = target_f(x)
   return (x,y)
 end
