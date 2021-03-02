@@ -85,7 +85,12 @@ Does this confirm your intuition that the samples will be near the origin?
 # ╔═╡ ffa3ee82-6309-11eb-391f-b16892752a1d
 begin
 	n= 10000;
-	data = randn(n);
+	# data = randn(n);
+	data = []
+	for i = 1:n
+		append!(data, randn())
+	end
+	data = convert.(Float64, data)
 	distance = .√ (data .^ 2);
 	histogram(distance, normalize=true, label="Distance from Origin", size=(800,600));
 	title!("Normalized Histogram (n=$n)");
@@ -109,7 +114,12 @@ As the dimensionality of the Gaussian increases, what can you say about the expe
 
 # ╔═╡ 6aca97d0-636c-11eb-08b1-95fb018618ef
 function generate_mvgaussian(D=1, n=10000)
-	return rand(MvNormal(D, 1), n)
+	# return rand(MvNormal(D, 1), n)
+	data = []
+	for i = 1: (D*n)
+		append!(data,randn())
+	end
+	return convert.(Float64, reshape(data, (D, n)))
 end
 
 # ╔═╡ 5c244d3c-644f-11eb-3008-778dfa469faa
@@ -204,7 +214,8 @@ For for $D=\{1,2,3,10,100\}$.
 
 # ╔═╡ 171207b6-6175-11eb-2467-cdfb7e1fd324
 function generate_mvgaussian_2(D=1, n=10000)
-	return rand.([MvNormal(D, 1),MvNormal(D, 1)], [n,n])
+	# return rand.([MvNormal(D, 1),MvNormal(D, 1)], [n,n])
+	return [generate_mvgaussian(D, n), generate_mvgaussian(D, n)]
 end
 
 # ╔═╡ fdef832a-639b-11eb-3005-d77b0a3009d3
